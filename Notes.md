@@ -16,3 +16,12 @@
 # Initial setup
 
 - components and .env setup available from Clerk website for Next.js
+
+
+## Prisma
+
+# Commands
+
+- Any changes to schema need to be pushed to db
+    - migrate (see docs)
+    
