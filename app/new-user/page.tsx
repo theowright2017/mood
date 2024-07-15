@@ -1,4 +1,4 @@
-import { prisma } from "@/utils/db/db"
+import { prisma } from "@/utils/db"
 import {  currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 

@@ -30,12 +30,14 @@ model JournalEntry {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userId String
+  userId String 
   user   User   @relation(fields: [userId], references: [id])
 
   analysis Analysis?
 
   content String @db.Text // remove max char limit
+
+  @@unique([userId, id])
 }
 
 model Analysis {
