@@ -1,5 +1,6 @@
 import EntryCard from '@/app/components/EntryCard'
 import NewEntryCard from '@/app/components/NewEntryCard'
+import { analyze } from '@/utils/ai'
 import { prisma } from '@/utils/db'
 import { currentUser } from '@clerk/nextjs/server'
 import Link from 'next/link'
@@ -20,8 +21,12 @@ const getEntries = async () => {
     orderBy: {
       createdAt: 'desc',
     },
+    include: {
+      analysis: true
+    }
   })
 
+  // console.log('ANALYZE::', await analyze('today was wonderful I had such a good time seeing family and friends'))
   return entries
 }
 
