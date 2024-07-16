@@ -1,6 +1,10 @@
 import { OpenAI } from '@langchain/openai'
 import { StructuredOutputParser } from 'langchain/output_parsers'
 import { PromptTemplate } from '@langchain/core/prompts'
+import { Document } from 'langchain/document'
+import { loadQARefineChain } from 'langchain/chains'
+import { OpenAIEmbeddings } from '@langchain/openai'
+import { MemoryVectorStore } from 'langchain/vectorstores/memory'
 import z from 'zod'
 
 const parser = StructuredOutputParser.fromZodSchema(
@@ -39,7 +43,7 @@ const getPrompt = async (content) => {
 }
 
 export const analyze = async (prompt) => {
-    const formatted = await getPrompt(prompt)
+  const formatted = await getPrompt(prompt)
   const model = new OpenAI({ temperature: 0, modelName: 'gpt-3.5-turbo-0125' })
   model.apiKey = process.env.OPENAI_API_KEY
   const result = await model.invoke(formatted)
@@ -50,4 +54,43 @@ export const analyze = async (prompt) => {
   } catch (err) {
     console.log(err)
   }
+}
+
+export const qa = async (question, entries) => {
+  const docs = entries.map((entry) => {
+    return new Document({
+      pageContent: entry.content,
+      metadata: { id: entry.id, createdAt: entry.createdAt },
+    })
+  })
+
+  const model = new OpenAI({ temperature: 0, modelName: 'gpt-3.5-turbo-0125' })
+
+  /**
+   *  - enable chaining
+   *  - use previous chain to inform current response
+   */
+  const chain = loadQARefineChain(model)
+
+  /**
+   *  - embeddings are a collection of vectors
+   *  - vectors are essentially a value converted to number form (vector) to be stored in a vector database
+   */
+  const embeddings = new OpenAIEmbeddings()
+
+  /**
+   *  - store is in-memory vector db
+   */
+  const store = await MemoryVectorStore.fromDocuments(docs, embeddings)
+
+  const relevantDocs = store.similaritySearch(question)
+
+  const res = await chain.invoke({
+    input_documents: relevantDocs,
+    question
+  })
+
+  return res.output_text
+
+
 }
